@@ -1,0 +1,9 @@
+# Swift Package Manager build products
+.build/
+
+# Built app bundle (produced by ./build.sh)
+*.app/
+
+# macOS / Finder cruft
+.DS_Store
+.flickrExclusion
