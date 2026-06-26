@@ -82,6 +82,21 @@ an app bug. Workarounds documented in README: free menu-bar space, use a menu-ba
 manager, or use the window mode (default). Nothing the app can do forces placement past
 a full bar + notch.
 
+## CI / Releases
+
+- Repo: `github.com/svwhisper/MQTTPeek` (private).
+- `.github/workflows/release.yml` on `macos-15`: triggers on `v*` tags (or manual
+  `workflow_dispatch`). Steps: build `UNIVERSAL=1 ./build.sh` → `lipo -info` check →
+  `ditto` zip → upload workflow artifact → on tags, `gh release create` with
+  `.github/RELEASE_NOTES.md` (uses built-in `GITHUB_TOKEN`, `permissions: contents: write`).
+- `build.sh` is the single build path: locates the product via `swift build
+  --show-bin-path`; `UNIVERSAL=1` adds `--arch arm64 --arch x86_64` (fat binary).
+- Released app is **ad-hoc signed** (`Signature=adhoc`, no Team ID) → downloaders must
+  clear quarantine: `xattr -dr com.apple.quarantine /Applications/MQTTPeek.app`.
+- v1.0.0 verified: asset `MQTTPeek.app.zip` (~816 KB), binary `x86_64 arm64`, run 1m09s.
+- Harmless warning: checkout@v4 / upload-artifact@v4 noted as Node 20 (run on Node 24);
+  v4 is current major — nothing to change yet.
+
 ## Possible future work
 
 - Move MQTT password to Keychain (currently UserDefaults — fine for LAN).
