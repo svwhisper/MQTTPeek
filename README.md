@@ -13,6 +13,10 @@ The built app is ~1.4 MB.
 open MQTTPeek.app
 ```
 
+Prefer not to build? Each `vX.Y.Z` tag publishes a prebuilt universal `MQTTPeek.app`
+on the [Releases](https://github.com/svwhisper/MQTTPeek/releases) page (see install
+note there — it's ad-hoc signed, so you clear the download quarantine once).
+
 First launch opens **Preferences** because nothing is configured yet. Enter your
 broker host, port, and topic, then **Save & Connect**.
 

@@ -1,0 +1,46 @@
+name: Release
+
+# Builds MQTTPeek.app and, when triggered by a version tag (vX.Y.Z),
+# publishes it as a GitHub Release asset. Manual runs just build + upload
+# the zip as a workflow artifact (no release).
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Build universal MQTTPeek.app
+        run: UNIVERSAL=1 ./build.sh release
+
+      - name: Verify architectures
+        run: lipo -info MQTTPeek.app/Contents/MacOS/MQTTPeek
+
+      - name: Zip app bundle
+        run: ditto -c -k --keepParent MQTTPeek.app MQTTPeek.app.zip
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MQTTPeek-app
+          path: MQTTPeek.app.zip
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" MQTTPeek.app.zip \
+            --title "MQTTPeek ${GITHUB_REF_NAME}" \
+            --notes-file .github/RELEASE_NOTES.md
