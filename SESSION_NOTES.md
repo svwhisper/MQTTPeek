@@ -33,7 +33,8 @@ build.sh                       swift build -c release → MQTTPeek.app (+ ad-hoc
 Sources/MQTTPeek/
   main.swift                   NSApplication entry point
   Preferences.swift            typed UserDefaults wrapper + .prefsChanged notification
-  MQTTManager.swift            CocoaMQTT subscribe-only; onValue / onState callbacks
+  MQTTManager.swift            CocoaMQTT subscribe-only; onValue / onState callbacks;
+                               owns reconnection via a watchdog timer
   ValueWindow.swift            frameless ValueWindow + ValueWindowController (layout,
                                drag, status dot, context menu, origin persistence)
   PreferencesWindow.swift      programmatic settings form (connection + display)
@@ -56,6 +57,16 @@ Sources/MQTTPeek/
   available even in accessory mode; reverts on close. Save writes prefs, posts
   `.prefsChanged` → `applyAll()` + `mqtt.reconnect()`.
 - **Connection state** → status dot colour (green/yellow/red) + menu header text.
+- **Reconnection** is owned by `MQTTManager`'s watchdog, not CocoaMQTT's `autoReconnect`
+  (disabled, to avoid two mechanisms fighting). A repeating `Timer` (every
+  `reconnectInterval` = 5 s, added in `.common` runloop mode, tolerance 1 s) calls
+  `connectNow()` whenever `wantConnection && state != .connected && Prefs.isConfigured`.
+  `connectNow()` tears down any old client (delegate nilled first → late callbacks
+  ignored) and builds a fresh one. This covers a normal drop, a broker that's down at
+  launch, and a connect stuck in "connecting". Re-subscribe happens in `didConnectAck`
+  on every (re)connect, so it survives reconnects regardless of `cleanSession`. Silent
+  drops (no TCP FIN) are detected by the 60 s keepalive, then retried within 5 s.
+  All state mutations are funnelled through `update()` on the main thread.
 
 ## Verified working (2026-06-26)
 
