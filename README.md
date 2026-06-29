@@ -61,3 +61,8 @@ defaults delete com.svwhisper.mqttpeek
 
 The MQTT password is stored in `UserDefaults` for simplicity (fine for a LAN broker).
 If you ever point this at an internet-facing broker, move the password to the Keychain.
+
+## License
+
+[MIT](LICENSE) © svwhisper. Bundles [CocoaMQTT](https://github.com/emqx/CocoaMQTT)
+(also MIT).
